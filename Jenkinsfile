@@ -6,10 +6,6 @@ pipeline {
     maven 'Maven'
   }
 
-  environment {
-    SONAR_TOKEN = credentials('sonar-token')
-  }
-
   stages {
     stage('Checkout') {
       steps { checkout scm }
@@ -28,20 +24,22 @@ pipeline {
 
     stage('SonarCloud Analysis') {
       steps {
-        bat """
-          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar ^
-          -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
-          -Dsonar.organization=Oksana0020 ^
-          -Dsonar.host.url=https://sonarcloud.io ^
-          -Dsonar.login=%SONAR_TOKEN%
-        """
+        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+          bat """
+            mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar ^
+            -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
+            -Dsonar.organization=oksana0020 ^
+            -Dsonar.host.url=https://sonarcloud.io ^
+            -Dsonar.token=%SONAR_TOKEN%
+          """
+        }
       }
     }
   }
 
   post {
     always {
-      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, onlyIfSuccessful: false
     }
   }
 }
