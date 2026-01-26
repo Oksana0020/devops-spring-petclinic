@@ -29,7 +29,7 @@ pipeline {
     stage('SonarCloud Analysis') {
       steps {
         bat """
-          mvn sonar:sonar ^
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar ^
           -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
           -Dsonar.organization=Oksana0020 ^
           -Dsonar.host.url=https://sonarcloud.io ^
