@@ -6,6 +6,10 @@ pipeline {
     maven 'Maven'
   }
 
+  environment {
+    SONAR_TOKEN = credentials('sonar-token')
+  }
+
   stages {
     stage('Checkout') {
       steps { checkout scm }
@@ -21,11 +25,23 @@ pipeline {
         always { junit 'target/surefire-reports/*.xml' }
       }
     }
+
+    stage('SonarCloud Analysis') {
+      steps {
+        bat """
+          mvn sonar:sonar ^
+          -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
+          -Dsonar.organization=Oksana0020 ^
+          -Dsonar.host.url=https://sonarcloud.io ^
+          -Dsonar.login=%SONAR_TOKEN%
+        """
+      }
+    }
   }
 
   post {
     always {
-      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, onlyIfSuccessful: false
+      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
     }
   }
 }
