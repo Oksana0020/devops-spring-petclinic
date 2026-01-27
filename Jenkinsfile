@@ -7,18 +7,27 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Build') {
-      steps { bat 'mvn -B -DskipTests clean package' }
+      steps {
+        bat 'mvn -B -DskipTests clean package'
+      }
     }
 
     stage('Test') {
-      steps { bat 'mvn -B test' }
+      steps {
+        bat 'mvn -B test'
+      }
       post {
-        always { junit 'target/surefire-reports/*.xml' }
+        always {
+          junit 'target/surefire-reports/*.xml'
+        }
       }
     }
 
@@ -26,11 +35,13 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
           bat """
-            mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar ^
+            mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar ^
             -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
             -Dsonar.organization=oksana0020 ^
             -Dsonar.host.url=https://sonarcloud.io ^
-            -Dsonar.token=%SONAR_TOKEN%
+            -Dsonar.token=%SONAR_TOKEN% ^
+            -Dsonar.scanner.forceReloadAll=true ^
+            -Dsonar.analysis.mode=publish
           """
         }
       }
