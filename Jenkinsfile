@@ -7,7 +7,6 @@ pipeline {
   }
 
   stages {
-
     stage('Checkout') {
       steps {
         checkout scm
@@ -39,9 +38,7 @@ pipeline {
             -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
             -Dsonar.organization=oksana0020 ^
             -Dsonar.host.url=https://sonarcloud.io ^
-            -Dsonar.token=%SONAR_TOKEN% ^
-            -Dsonar.scanner.forceReloadAll=true ^
-            -Dsonar.analysis.mode=publish
+            -Dsonar.token=%SONAR_TOKEN%
           """
         }
       }
@@ -50,7 +47,7 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, onlyIfSuccessful: false
+      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
     }
   }
 }
