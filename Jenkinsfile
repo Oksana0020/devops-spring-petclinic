@@ -21,7 +21,7 @@ pipeline {
 
     stage('Test') {
       steps {
-        bat 'mvn -B test'
+        bat 'mvn -B verify'
       }
       post {
         always {
@@ -38,7 +38,8 @@ pipeline {
             -Dsonar.projectKey=Oksana0020_devops-spring-petclinic ^
             -Dsonar.organization=oksana0020 ^
             -Dsonar.host.url=https://sonarcloud.io ^
-            -Dsonar.token=%SONAR_TOKEN%
+            -Dsonar.token=%SONAR_TOKEN% ^
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           """
         }
       }
@@ -47,7 +48,7 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      archiveArtifacts artifacts: 'target/*.war', fingerprint: true
     }
   }
 }
