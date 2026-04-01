@@ -86,7 +86,7 @@ pipeline {
               -o StrictHostKeyChecking=no ^
               -o IdentitiesOnly=yes ^
               %EC2_USER%@%EC2_HOST% ^
-              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
+              "sudo docker system prune -af --filter 'label!=keep' || true && sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
       }
