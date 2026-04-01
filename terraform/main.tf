@@ -21,7 +21,7 @@ resource "aws_security_group" "petclinic_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["193.203.139.111/32"]
+    cidr_blocks = ["64.43.50.169/32"]
   }
 
   ingress {
@@ -60,6 +60,10 @@ resource "aws_instance" "petclinic_ec2" {
 
   tags = {
     Name = "petclinic-ec2"
+  }
+
+  lifecycle {
+    ignore_changes = [ami]
   }
 }
 

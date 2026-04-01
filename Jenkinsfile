@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = 'oksana0020/petclinic'
-    EC2_HOST     = '13.53.134.155'
+    EC2_HOST     = '16.171.200.19'
   }
 
   tools {
