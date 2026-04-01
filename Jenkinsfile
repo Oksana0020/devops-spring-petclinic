@@ -49,11 +49,7 @@ pipeline {
       steps {
         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_KEY', usernameVariable: 'EC2_USER')]) {
           bat """
-            ssh -i "%EC2_KEY%" -o StrictHostKeyChecking=no %EC2_USER%@13.53.134.155 ^
-            "sudo docker stop petclinic-app || true && ^
-             sudo docker rm petclinic-app || true && ^
-             sudo docker pull oksana0020/petclinic:1.0 && ^
-             sudo docker run -d -p 8080:8080 --name petclinic-app oksana0020/petclinic:1.0"
+            ssh -i "%EC2_KEY%" -o StrictHostKeyChecking=no %EC2_USER%@13.53.134.155 "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull oksana0020/petclinic:1.0 && sudo docker run -d -p 8080:8080 --name petclinic-app oksana0020/petclinic:1.0"
           """
         }
       }
