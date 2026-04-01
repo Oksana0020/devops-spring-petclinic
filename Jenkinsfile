@@ -60,7 +60,7 @@ pipeline {
           bat """
             docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% .
             docker tag %DOCKER_IMAGE%:%BUILD_NUMBER% %DOCKER_IMAGE%:latest
-            docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
             docker push %DOCKER_IMAGE%:%BUILD_NUMBER%
             docker push %DOCKER_IMAGE%:latest
           """
@@ -77,11 +77,11 @@ pipeline {
         )]) {
           bat """
             icacls "%EC2_KEY%" /inheritance:r /grant:r "%USERNAME%:R"
-            ssh -i "%EC2_KEY%" ^^
-              -o StrictHostKeyChecking=no ^^
-              -o BatchMode=yes ^^
-              %EC2_USER%@%EC2_HOST% ^^
-              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
+            ssh -i "%EC2_KEY%" ^
+              -o StrictHostKeyChecking=no ^
+              -o BatchMode=yes ^
+              %EC2_USER%@%EC2_HOST% ^
+              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
       }
