@@ -79,7 +79,8 @@ pipeline {
             icacls "%EC2_KEY%" /inheritance:r
             icacls "%EC2_KEY%" /remove:g "BUILTIN\\Users"
             icacls "%EC2_KEY%" /remove:g "NT AUTHORITY\\Authenticated Users"
-            icacls "%EC2_KEY%" /grant:r "%USERNAME%:R"
+            icacls "%EC2_KEY%" /grant:r "SYSTEM:R"
+            icacls "%EC2_KEY%" /grant:r "Administrators:R"
 
             ssh -i "%EC2_KEY%" ^
               -o StrictHostKeyChecking=no ^
