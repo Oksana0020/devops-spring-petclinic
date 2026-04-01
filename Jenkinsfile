@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  environment {
+    DOCKER_IMAGE = 'oksana0020/petclinic'
+    EC2_HOST     = '13.53.134.155'
+  }
+
   tools {
     jdk 'JDK17'
     maven 'Maven'
@@ -45,12 +50,38 @@ pipeline {
       }
     }
 
+    stage('Docker Build & Push') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub-credentials',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          bat """
+            docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% .
+            docker tag %DOCKER_IMAGE%:%BUILD_NUMBER% %DOCKER_IMAGE%:latest
+            docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+            docker push %DOCKER_IMAGE%:%BUILD_NUMBER%
+            docker push %DOCKER_IMAGE%:latest
+          """
+        }
+      }
+    }
+
     stage('Deploy to AWS EC2') {
       steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_KEY', usernameVariable: 'EC2_USER')]) {
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'ec2-ssh-key',
+          keyFileVariable: 'EC2_KEY',
+          usernameVariable: 'EC2_USER'
+        )]) {
           bat """
-            echo Connecting to EC2...
-            ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=no -i "%EC2_KEY%" %EC2_USER%@13.53.134.155 "bash -lc 'echo CONNECTED; sudo docker stop petclinic-app || true; sudo docker rm petclinic-app || true; sudo docker pull oksana0020/petclinic:1.0; sudo docker run -d -p 8080:8080 --name petclinic-app oksana0020/petclinic:1.0; echo DEPLOY_DONE'" < NUL
+            icacls "%EC2_KEY%" /inheritance:r /grant:r "%USERNAME%:R"
+            ssh -i "%EC2_KEY%" ^^
+              -o StrictHostKeyChecking=no ^^
+              -o BatchMode=yes ^^
+              %EC2_USER%@%EC2_HOST% ^^
+              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
       }
