@@ -70,13 +70,22 @@ pipeline {
 
     stage('Deploy to AWS EC2') {
       steps {
-        sshagent(credentials: ['ec2-ssh-key']) {
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'ec2-ssh-key',
+          keyFileVariable: 'EC2_KEY',
+          usernameVariable: 'EC2_USER'
+        )]) {
           bat """
-            ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes ec2-user@%EC2_HOST% ^
-              "sudo docker stop petclinic-app || true && ^
-               sudo docker rm petclinic-app || true && ^
-               sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && ^
-               sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
+            icacls "%EC2_KEY%" /inheritance:r
+            icacls "%EC2_KEY%" /remove:g "BUILTIN\\Users"
+            icacls "%EC2_KEY%" /remove:g "NT AUTHORITY\\Authenticated Users"
+            icacls "%EC2_KEY%" /grant:r "%USERNAME%:R"
+
+            ssh -i "%EC2_KEY%" ^
+              -o StrictHostKeyChecking=no ^
+              -o IdentitiesOnly=yes ^
+              %EC2_USER%@%EC2_HOST% ^
+              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
       }
