@@ -58,6 +58,11 @@ resource "aws_instance" "petclinic_ec2" {
   key_name               = "petclinic-key"
   vpc_security_group_ids = [aws_security_group.petclinic_sg.id]
 
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
+
   tags = {
     Name = "petclinic-ec2"
   }
