@@ -1,3 +1,10 @@
+# Grafana Alerting Setup Script for PetClinic
+# Configures Slack contact point, default notification policy and three alert rules:
+#   1)PetClinic App Down: fires when app is unreachable (up == 0) for > 1 minute
+#   2)High CPU Usage: fires when process_cpu_usage exceeds 80% for > 2 minutes
+#   3)High Heap Memory: fires when JVM heap usage exceeds 80% of max for > 2 minutes
+# prerequisites: Grafana running on localhost:3000 with Prometheus configured
+# using: $env:SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..." ; .\setup-alerts.ps1
 $cred = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("admin:mtu12345"))
 $headers = @{ "Authorization" = "Basic $cred"; "Content-Type" = "application/json" }
 $baseUrl = "http://localhost:3000"
