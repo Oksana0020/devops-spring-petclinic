@@ -97,5 +97,11 @@ pipeline {
     always {
       archiveArtifacts artifacts: 'target/*.war', fingerprint: true
     }
+    success {
+      echo "Pipeline completed successfully. Image ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} deployed to ${env.EC2_HOST}"
+    }
+    failure {
+      echo "Pipeline failed at stage. Check logs for build #${env.BUILD_NUMBER}"
+    }
   }
 }
