@@ -14,19 +14,25 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        echo 'Checking out source code from GitHub...'
         checkout scm
+        echo 'Source code checkout complete.'
       }
     }
 
     stage('Build') {
       steps {
+        echo 'Building application with Maven (tests skipped)...'
         bat 'mvn -B -DskipTests clean package'
+        echo 'Build complete. WAR file ready in target/'
       }
     }
 
     stage('Test') {
       steps {
+        echo 'Running unit and integration tests...'
         bat 'mvn -B verify'
+        echo 'All tests completed.'
       }
       post {
         always {
@@ -52,6 +58,7 @@ pipeline {
 
     stage('Docker Build & Push') {
       steps {
+        echo "Building Docker image ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}..."
         withCredentials([usernamePassword(
           credentialsId: 'dockerhub-credentials',
           usernameVariable: 'DOCKER_USER',
@@ -70,6 +77,7 @@ pipeline {
 
     stage('Deploy to AWS EC2') {
       steps {
+        echo "Deploying image ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} to EC2 at ${env.EC2_HOST}..."
         withCredentials([sshUserPrivateKey(
           credentialsId: 'ec2-ssh-key',
           keyFileVariable: 'EC2_KEY',
