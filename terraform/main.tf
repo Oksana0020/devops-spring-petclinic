@@ -21,7 +21,7 @@ resource "aws_security_group" "petclinic_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["64.43.50.169/32"]
+    cidr_blocks = ["64.43.50.127/32"]
   }
 
   ingress {
