@@ -73,5 +73,14 @@ resource "aws_instance" "petclinic_ec2" {
 }
 
 output "ec2_public_ip" {
-  value = aws_instance.petclinic_ec2.public_ip
-}   
+  value = aws_eip.petclinic_eip.public_ip
+}
+
+resource "aws_eip" "petclinic_eip" {
+  instance = aws_instance.petclinic_ec2.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "petclinic-eip"
+  }
+}

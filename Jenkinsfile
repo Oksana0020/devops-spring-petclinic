@@ -1,9 +1,13 @@
 pipeline {
   agent any
 
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+
   environment {
     DOCKER_IMAGE = 'oksana0020/petclinic'
-    EC2_HOST     = '16.171.200.19'
+    EC2_HOST     = '16.170.45.98'  // elastic IP
   }
 
   tools {
