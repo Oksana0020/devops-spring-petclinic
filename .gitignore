@@ -53,3 +53,5 @@ crash.*.log
 _site/
 *.css
 !petclinic.css
+
+petclinic-key.pem
