@@ -21,6 +21,7 @@ pipeline {
         echo 'Checking out source code from GitHub...'
         checkout scm
         echo 'Source code checkout complete.'
+        echo 'Pipeline triggered automatically by SCM polling, build initiated'
       }
     }
 
