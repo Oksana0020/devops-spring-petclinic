@@ -6,7 +6,7 @@
 ![AWS EC2](https://img.shields.io/badge/AWS%20EC2-Deployed-orange?logo=amazon-aws)
 ![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus%20%2B%20Grafana-red?logo=prometheus)
 
-**Live app:** http://16.170.45.98:8080
+**Live app:** 16.170.45.98:8080
 
 # Spring PetClinic Sample Application [![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml)[![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml)
 
