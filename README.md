@@ -1,5 +1,13 @@
 #DevOps Assignment – 2026
 
+## CI/CD Pipeline Status
+![Jenkins](https://img.shields.io/badge/Jenkins-Build%20%26%20Deploy-blue?logo=jenkins)
+![Docker](https://img.shields.io/badge/Docker-minashka%2Fpetclinic-blue?logo=docker)
+![AWS EC2](https://img.shields.io/badge/AWS%20EC2-Deployed-orange?logo=amazon-aws)
+![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus%20%2B%20Grafana-red?logo=prometheus)
+
+**Live app:** http://16.170.45.98:8080
+
 # Spring PetClinic Sample Application [![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml)[![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml)
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/spring-projects/spring-petclinic) [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=7517918)
