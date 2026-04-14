@@ -62,8 +62,20 @@ pipeline {
 
     stage('Quality Gate') {
       steps {
-        timeout(time: 3, unit: 'MINUTES') {
-          waitForQualityGate abortPipeline: true
+        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+          powershell '''
+            $token = $env:SONAR_TOKEN
+            $auth = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($token + ":"))
+            $headers = @{ Authorization = $auth }
+            $uri = "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Oksana0020_devops-spring-petclinic"
+            $r = Invoke-RestMethod -Uri $uri -Headers $headers
+            $status = $r.projectStatus.status
+            Write-Host "Quality Gate status: $status"
+            if ($status -ne "OK") {
+              Write-Error "Quality Gate FAILED: $status"
+              exit 1
+            }
+          '''
         }
       }
     }
