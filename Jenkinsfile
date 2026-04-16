@@ -128,34 +128,33 @@ pipeline {
     stage('Verify Deployment') {
       steps {
         echo "Verifying deployment health at http://${env.EC2_HOST}:8080/actuator/health ..."
-        powershell """
-          \$url        = "http://${env.EC2_HOST}:8080/actuator/health"
-          \$maxRetries = 12
-          \$retryDelay = 10
-          \$success    = \$false
+        powershell '''
+          $url        = "http://$env:EC2_HOST:8080/actuator/health"
+          $maxRetries = 12
+          $retryDelay = 10
+          $success    = $false
 
-          for (\$i = 1; \$i -le \$maxRetries; \$i++) {
+          for ($i = 1; $i -le $maxRetries; $i++) {
             try {
-              \$response = Invoke-RestMethod -Uri \$url -TimeoutSec 5
-              if (\$response.status -eq "UP") {
+              $response = Invoke-RestMethod -Uri $url -TimeoutSec 5
+              if ($response.status -eq "UP") {
                 Write-Host "Deployment verified, application is UP"
-                \$success = \$true
+                $success = $true
                 break
               }
-              Write-Host "Attempt \$i/\$maxRetries — status='\$(\$response.status)', retrying in \${retryDelay}s..."
+              Write-Host "Attempt $i/$maxRetries - status=$($response.status), retrying in ${retryDelay}s..."
             } catch {
-              Write-Host "Attempt \$i/\$maxRetries not reachable yet (\$(\$_.Exception.Message)), retrying in \${retryDelay}s..."
+              Write-Host "Attempt $i/$maxRetries - not reachable yet, retrying in ${retryDelay}s..."
             }
-            Start-Sleep -Seconds \$retryDelay
+            Start-Sleep -Seconds $retryDelay
           }
 
-          if (-not \$success) {
-            \$prevBuild = ${env.BUILD_NUMBER} - 1
-            Write-Host "Health check failed -- rolling back to ${env.DOCKER_IMAGE}:\$prevBuild"
-            Write-Error ('Deployment verification FAILED: ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} did not become healthy after ' + (\$maxRetries * \$retryDelay) + 's. Rollback to build ' + \$prevBuild + ' required.')
+          if (-not $success) {
+            $prevBuild = [int]$env:BUILD_NUMBER - 1
+            Write-Host "Health check failed - rollback to $env:DOCKER_IMAGE:$prevBuild required"
             exit 1
           }
-        """
+        '''
       }
     }
   }
