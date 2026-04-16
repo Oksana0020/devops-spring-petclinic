@@ -156,12 +156,12 @@ pipeline {
 
             if (-not $success) {
               Write-Host "--- CONTAINER STATUS ---"
-              $keyFile = $env:EC2_KEY
-              $user    = $env:EC2_USER
-              $host    = $env:EC2_HOST
-              & ssh -i $keyFile -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "$user@$host" "sudo docker ps -a && echo '--- LOGS ---' && sudo docker logs petclinic-app --tail 50"
+              $keyFile  = $env:EC2_KEY
+              $ec2User  = $env:EC2_USER
+              $ec2Addr  = $env:EC2_HOST
+              & ssh -i $keyFile -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "${ec2User}@${ec2Addr}" "sudo docker ps -a && echo '--- LOGS ---' && sudo docker logs petclinic-app --tail 50"
               $prevBuild = [int]$env:BUILD_NUMBER - 1
-              Write-Host "Health check failed,rollback to $env:DOCKER_IMAGE:$prevBuild required"
+              Write-Host "Health check failed, rollback to $env:DOCKER_IMAGE:$prevBuild required"
               exit 1
             }
           '''
