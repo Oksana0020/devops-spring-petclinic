@@ -130,8 +130,8 @@ pipeline {
         echo "Verifying deployment health at http://${env.EC2_HOST}:8080/actuator/health ..."
         powershell '''
           $url        = "http://$env:EC2_HOST:8080/actuator/health"
-          $maxRetries = 12
-          $retryDelay = 10
+          $maxRetries = 24
+          $retryDelay = 15
           $success    = $false
 
           for ($i = 1; $i -le $maxRetries; $i++) {

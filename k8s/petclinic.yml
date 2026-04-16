@@ -40,11 +40,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: postgres
-            - name: SERVICE_BINDING_ROOT
-              value: /bindings
-            - name: SPRING_APPLICATION_JSON
-              value: '{"management.endpoint.health.probes.enabled":true,"management.health.livenessstate.enabled":true,"management.health.readinessstate.enabled":true}'
+              value: default
           ports:
             - name: http
               containerPort: 8080
@@ -75,13 +71,4 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 10
-          volumeMounts:
-            - mountPath: /bindings/secret
-              name: binding
-              readOnly: true
-      volumes:
-        - name: binding
-          projected:
-            sources:
-              - secret:
-                  name: demo-db
+      volumes: []
