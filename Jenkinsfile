@@ -119,7 +119,7 @@ pipeline {
               -o StrictHostKeyChecking=no ^
               -o IdentitiesOnly=yes ^
               %EC2_USER%@%EC2_HOST% ^
-              "sudo docker system prune -af --filter 'label!=keep' || true && sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped --label keep -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
+              "sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped --label keep -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
       }
@@ -128,33 +128,44 @@ pipeline {
     stage('Verify Deployment') {
       steps {
         echo "Verifying deployment health at http://${env.EC2_HOST}:8080/actuator/health ..."
-        powershell '''
-          $url        = "http://$env:EC2_HOST:8080/actuator/health"
-          $maxRetries = 24
-          $retryDelay = 15
-          $success    = $false
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'ec2-ssh-key',
+          keyFileVariable: 'EC2_KEY',
+          usernameVariable: 'EC2_USER'
+        )]) {
+          powershell '''
+            $url        = "http://$env:EC2_HOST:8080/actuator/health"
+            $maxRetries = 24
+            $retryDelay = 15
+            $success    = $false
 
-          for ($i = 1; $i -le $maxRetries; $i++) {
-            try {
-              $response = Invoke-RestMethod -Uri $url -TimeoutSec 5
-              if ($response.status -eq "UP") {
-                Write-Host "Deployment verified, application is UP"
-                $success = $true
-                break
+            for ($i = 1; $i -le $maxRetries; $i++) {
+              try {
+                $response = Invoke-RestMethod -Uri $url -TimeoutSec 5
+                if ($response.status -eq "UP") {
+                  Write-Host "Deployment verified, application is UP"
+                  $success = $true
+                  break
+                }
+                Write-Host "Attempt $i/$maxRetries - status=$($response.status), retrying in ${retryDelay}s..."
+              } catch {
+                Write-Host "Attempt $i/$maxRetries - not reachable yet, retrying in ${retryDelay}s..."
               }
-              Write-Host "Attempt $i/$maxRetries - status=$($response.status), retrying in ${retryDelay}s..."
-            } catch {
-              Write-Host "Attempt $i/$maxRetries - not reachable yet, retrying in ${retryDelay}s..."
+              Start-Sleep -Seconds $retryDelay
             }
-            Start-Sleep -Seconds $retryDelay
-          }
 
-          if (-not $success) {
-            $prevBuild = [int]$env:BUILD_NUMBER - 1
-            Write-Host "Health check failed - rollback to $env:DOCKER_IMAGE:$prevBuild required"
-            exit 1
-          }
-        '''
+            if (-not $success) {
+              Write-Host "--- CONTAINER STATUS ---"
+              $keyFile = $env:EC2_KEY
+              $user    = $env:EC2_USER
+              $host    = $env:EC2_HOST
+              & ssh -i $keyFile -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "$user@$host" "sudo docker ps -a && echo '--- LOGS ---' && sudo docker logs petclinic-app --tail 50"
+              $prevBuild = [int]$env:BUILD_NUMBER - 1
+              Write-Host "Health check failed,rollback to $env:DOCKER_IMAGE:$prevBuild required"
+              exit 1
+            }
+          '''
+        }
       }
     }
   }
