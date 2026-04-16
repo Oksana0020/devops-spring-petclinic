@@ -133,6 +133,14 @@ pipeline {
           keyFileVariable: 'EC2_KEY',
           usernameVariable: 'EC2_USER'
         )]) {
+          // Fix SSH key permissions
+          bat """
+            icacls "%EC2_KEY%" /inheritance:r
+            icacls "%EC2_KEY%" /remove:g "BUILTIN\\Users"
+            icacls "%EC2_KEY%" /remove:g "NT AUTHORITY\\Authenticated Users"
+            icacls "%EC2_KEY%" /grant:r "SYSTEM:R"
+            icacls "%EC2_KEY%" /grant:r "Administrators:R"
+          """
           powershell '''
             $url        = "http://$env:EC2_HOST:8080/actuator/health"
             $maxRetries = 24
@@ -156,9 +164,9 @@ pipeline {
 
             if (-not $success) {
               Write-Host "--- CONTAINER STATUS ---"
-              $keyFile  = $env:EC2_KEY
-              $ec2User  = $env:EC2_USER
-              $ec2Addr  = $env:EC2_HOST
+              $keyFile = $env:EC2_KEY
+              $ec2User = $env:EC2_USER
+              $ec2Addr = $env:EC2_HOST
               & ssh -i $keyFile -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "${ec2User}@${ec2Addr}" "sudo docker ps -a && echo '--- LOGS ---' && sudo docker logs petclinic-app --tail 50"
               $prevBuild = [int]$env:BUILD_NUMBER - 1
               Write-Host "Health check failed, rollback to $env:DOCKER_IMAGE:$prevBuild required"
