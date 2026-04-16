@@ -119,9 +119,42 @@ pipeline {
               -o StrictHostKeyChecking=no ^
               -o IdentitiesOnly=yes ^
               %EC2_USER%@%EC2_HOST% ^
-              "sudo docker system prune -af --filter 'label!=keep' || true && sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
+              "sudo docker system prune -af --filter 'label!=keep' || true && sudo docker stop petclinic-app || true && sudo docker rm petclinic-app || true && sudo docker pull %DOCKER_IMAGE%:%BUILD_NUMBER% && sudo docker run -d --restart unless-stopped --label keep -p 8080:8080 --name petclinic-app %DOCKER_IMAGE%:%BUILD_NUMBER%"
           """
         }
+      }
+    }
+
+    stage('Verify Deployment') {
+      steps {
+        echo "Verifying deployment health at http://${env.EC2_HOST}:8080/actuator/health ..."
+        powershell """
+          \$url        = "http://${env.EC2_HOST}:8080/actuator/health"
+          \$maxRetries = 12
+          \$retryDelay = 10
+          \$success    = \$false
+
+          for (\$i = 1; \$i -le \$maxRetries; \$i++) {
+            try {
+              \$response = Invoke-RestMethod -Uri \$url -TimeoutSec 5
+              if (\$response.status -eq "UP") {
+                Write-Host "Deployment verified, application is UP"
+                \$success = \$true
+                break
+              }
+              Write-Host "Attempt \$i/\$maxRetries — status='\$(\$response.status)', retrying in \${retryDelay}s..."
+            } catch {
+              Write-Host "Attempt \$i/\$maxRetries not reachable yet (\$(\$_.Exception.Message)), retrying in \${retryDelay}s..."
+            }
+            Start-Sleep -Seconds \$retryDelay
+          }
+
+          if (-not \$success) {
+            \$prevBuild = ${env.BUILD_NUMBER} - 1
+            Write-Host "Health check failed, rolling back to ${env.DOCKER_IMAGE}:\$prevBuild"
+            throw "Deployment verification fail: ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} did not becom healthy after \$(\$maxRetries * \$retryDelay)s. Rollback to :prev build \$prevBuild required."
+          }
+        """
       }
     }
   }
@@ -134,7 +167,7 @@ pipeline {
       echo "BUILD #${env.BUILD_NUMBER} SUCCESS — ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} deployed to http://${env.EC2_HOST}:8080"
     }
     failure {
-      echo "BUILD #${env.BUILD_NUMBER} FAILED — review console output for details"
+      echo "BUILD #${env.BUILD_NUMBER} FAILED, review console output for details"
     }
   }
 }
