@@ -151,8 +151,9 @@ pipeline {
 
           if (-not \$success) {
             \$prevBuild = ${env.BUILD_NUMBER} - 1
-            Write-Host "Health check failed, rolling back to ${env.DOCKER_IMAGE}:\$prevBuild"
-            throw "Deployment verification fail: ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} did not becom healthy after \$(\$maxRetries * \$retryDelay)s. Rollback to :prev build \$prevBuild required."
+            Write-Host "Health check failed -- rolling back to ${env.DOCKER_IMAGE}:\$prevBuild"
+            Write-Error ('Deployment verification FAILED: ${env.DOCKER_IMAGE}:${env.BUILD_NUMBER} did not become healthy after ' + (\$maxRetries * \$retryDelay) + 's. Rollback to build ' + \$prevBuild + ' required.')
+            exit 1
           }
         """
       }
