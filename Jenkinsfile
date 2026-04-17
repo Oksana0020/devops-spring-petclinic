@@ -127,13 +127,12 @@ pipeline {
 
     stage('Verify Deployment') {
       steps {
-        echo "Verifying deployment health at http://${env.EC2_HOST}:8080/actuator/health ..."
+        echo "Verifying deployment health on ${env.EC2_HOST} via SSH..."
         withCredentials([sshUserPrivateKey(
           credentialsId: 'ec2-ssh-key',
           keyFileVariable: 'EC2_KEY',
           usernameVariable: 'EC2_USER'
         )]) {
-          // Fix SSH key permissions
           bat """
             icacls "%EC2_KEY%" /inheritance:r
             icacls "%EC2_KEY%" /remove:g "BUILTIN\\Users"
@@ -141,37 +140,8 @@ pipeline {
             icacls "%EC2_KEY%" /grant:r "SYSTEM:R"
             icacls "%EC2_KEY%" /grant:r "Administrators:R"
           """
-          powershell '''
-            $url        = "http://$env:EC2_HOST:8080/actuator/health"
-            $maxRetries = 24
-            $retryDelay = 15
-            $success    = $false
-
-            for ($i = 1; $i -le $maxRetries; $i++) {
-              try {
-                $response = Invoke-RestMethod -Uri $url -TimeoutSec 5
-                if ($response.status -eq "UP") {
-                  Write-Host "Deployment verified, application is UP"
-                  $success = $true
-                  break
-                }
-                Write-Host "Attempt $i/$maxRetries - status=$($response.status), retrying in ${retryDelay}s..."
-              } catch {
-                Write-Host "Attempt $i/$maxRetries - not reachable yet, retrying in ${retryDelay}s..."
-              }
-              Start-Sleep -Seconds $retryDelay
-            }
-
-            if (-not $success) {
-              Write-Host "--- CONTAINER STATUS ---"
-              $keyFile = $env:EC2_KEY
-              $ec2User = $env:EC2_USER
-              $ec2Addr = $env:EC2_HOST
-              & ssh -i $keyFile -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "${ec2User}@${ec2Addr}" "sudo docker ps -a && echo '--- LOGS ---' && sudo docker logs petclinic-app --tail 50"
-              $prevBuild = [int]$env:BUILD_NUMBER - 1
-              Write-Host "Health check failed, rollback to $env:DOCKER_IMAGE:$prevBuild required"
-              exit 1
-            }
+          bat '''
+            ssh -i "%EC2_KEY%" -o StrictHostKeyChecking=no -o IdentitiesOnly=yes %EC2_USER%@%EC2_HOST% "for i in $(seq 1 24); do HEALTH=$(curl -sf http://localhost:8080/actuator/health 2>/dev/null); if echo $HEALTH | grep -q UP; then echo Deployment verified application is UP; exit 0; fi; echo Attempt $i/24 not ready yet, retrying in 15s; sleep 15; done; echo Health check failed after 24 attempts; sudo docker ps -a; sudo docker logs petclinic-app --tail 50; exit 1"
           '''
         }
       }
