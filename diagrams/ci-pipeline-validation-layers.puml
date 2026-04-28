@@ -1,0 +1,41 @@
+@startuml
+title CI Pipeline Validation Layers
+top to bottom direction
+skinparam shadowing false
+skinparam roundcorner 15
+skinparam packageStyle rectangle
+
+actor Developer
+
+rectangle "GitHub Repository" as GH
+rectangle "Jenkins CI Pipeline" as JENKINS
+
+package "Validation Layer 1" {
+  rectangle "Build Validation\nMaven\n- compile\n- package" as BUILD
+}
+
+package "Validation Layer 2" {
+  rectangle "Test Validation\nJUnit\nJaCoCo\n- unit tests\n- coverage report" as TEST
+}
+
+package "Validation Layer 3" {
+  rectangle "Code Quality Validation\nSonarCloud\n- static analysis\n- quality gate" as QUALITY
+}
+
+rectangle "Deployable Artifact\nWAR / Docker Image" as ARTIFACT
+rectangle "Feedback / Results" as FEEDBACK
+
+Developer --> GH : push code
+GH --> JENKINS : trigger pipeline
+JENKINS --> BUILD : execute build
+
+BUILD --> TEST : run tests
+TEST --> QUALITY : send coverage + analysis input
+
+BUILD --> ARTIFACT : package artifact
+QUALITY --> ARTIFACT : gate passed
+
+TEST --> FEEDBACK : test results
+QUALITY --> FEEDBACK : quality results
+
+@enduml

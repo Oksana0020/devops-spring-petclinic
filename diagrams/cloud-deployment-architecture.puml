@@ -1,0 +1,27 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor White
+  BorderColor Black
+}
+
+actor Developer
+cloud "AWS Cloud" {
+  rectangle "Terraform\nInfrastructure Provisioning" as Terraform
+  rectangle "Ansible\nConfiguration Management" as Ansible
+  rectangle "EC2 Instance" as EC2
+  rectangle "Docker Runtime /\nTomcat Container" as DockerTomcat
+  rectangle "Kubernetes\n(EKS or K3s on EC2)" as K8s
+  rectangle "Spring PetClinic\nApplication" as PetClinic
+  rectangle "DockerHub\nContainer Registry" as DockerHub
+}
+
+Terraform --> EC2 : Provision VM
+Terraform --> EC2 : Configure host
+Ansible --> DockerTomcat : Install Docker / Tomcat\nPull image
+EC2 --> DockerTomcat
+DockerTomcat --> PetClinic : Run containerized app
+DockerTomcat --> K8s : Optional orchestration
+K8s --> PetClinic : Manage pods / containers
+DockerHub --> DockerTomcat : Pull image
+PetClinic --> Developer : Access application
+Developer --> Terraform : Apply IaC

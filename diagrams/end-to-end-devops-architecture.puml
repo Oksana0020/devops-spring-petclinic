@@ -1,0 +1,51 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor White
+  BorderColor Black
+}
+
+actor Developer
+
+package "AWS Cloud" {
+  [Terraform]
+  [Ansible]
+  [EC2]
+  [Docker / Tomcat Runtime]
+  [Kubernetes]
+  [Spring PetClinic App]
+}
+
+package "Monitoring" {
+  [Actuator]
+  [CloudWatch]
+  [Prometheus]
+  [Grafana]
+  [Slack]
+}
+
+[Terraform] --> [EC2]
+[Ansible] --> [Docker / Tomcat Runtime]
+[EC2] --> [Kubernetes]
+[Docker / Tomcat Runtime] --> [Spring PetClinic App]
+[Kubernetes] --> [Spring PetClinic App]
+
+[Spring PetClinic App] --> [Actuator]
+[Spring PetClinic App] --> [CloudWatch]
+[Actuator] --> [Prometheus]
+[Prometheus] --> [Grafana]
+[CloudWatch] --> [Grafana]
+[Grafana] --> [Slack]
+
+Developer --> [GitHub Repository\nSource Code + Pipeline Files]
+[GitHub Repository\nSource Code + Pipeline Files] --> [GitHub Actions\nCI Checks]: Status checks
+[GitHub Repository\nSource Code + Pipeline Files] --> [Jenkins Pipeline]: Status checks
+Developer --> [Jenkins Pipeline]
+[Jenkins Pipeline] --> [Maven]
+[Maven] --> [JUnit + JaCoCo]
+[Maven] --> [SonarCloud]
+[Maven] --> [Docker Build]
+[Docker Build] --> [DockerHub]
+[DockerHub] --> Developer
+[JUnit + JaCoCo] --> [SonarCloud]
+
+@enduml

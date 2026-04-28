@@ -1,0 +1,25 @@
+@startuml
+actor Developer
+participant GitHub
+participant Jenkins
+participant Maven
+participant "JUnit + JaCoCo" as JUnit
+participant SonarCloud
+participant Docker
+participant DockerHub
+participant "AWS EC2" as EC2
+participant Monitoring
+
+Developer -> GitHub: Commit & Push Code
+GitHub -> Jenkins: Trigger Pipeline\n(Webhook / SCM Polling)
+Jenkins -> Maven: Build Application
+Maven -> JUnit: Execute Unit Tests
+JUnit -> Maven: Test Results
+Maven -> SonarCloud: Static Code Analysis
+SonarCloud -> Jenkins: Quality Gate Result
+Jenkins -> Docker: Build Container Image
+Docker -> DockerHub: Push Image
+DockerHub -> EC2: Pull Image
+EC2 -> Monitoring: Runtime Metrics
+Developer -> Monitoring: System Monitoring & Alerts
+@enduml
